@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Telegram shop bot — Termux / Python 3
+# Telegram shop bot — Termux / Render
 # Install: pip install requests
 
 import json
+import os
 import sqlite3
+import threading
 import time
-import requests
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from html import escape
+import requests
 
 BOT_TOKEN = "8990644924:AAGUr2F-qRjEKC6WWPz_tRxdhordWPzunk4"
 OWNER_ID = 8886164132
@@ -15,6 +18,26 @@ OWNER_USERNAME = "lv_oxyg3n"
 DB_FILE = "shopbot.sqlite3"
 API = "https://api.telegram.org/bot{}"
 FILE_API = "https://api.telegram.org/file/bot{}"
+
+# --- Render Port Binding (Free Web Service ke liye) ---
+class DummyHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Bot is alive and running!")
+
+    def log_message(self, format, *args):
+        return  # Console me unnecessary HTTP logs hide karne ke liye
+
+def start_dummy_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), DummyHandler)
+    server.serve_forever()
+
+# Background thread me HTTP server start karo taaki Render timeout na de
+threading.Thread(target=start_dummy_server, daemon=True).start()
+# -----------------------------------------------------
 
 LANGS = {
     "en": {
